@@ -1,7 +1,7 @@
 ---
 layout: /archives
 title: 理解__proto__和prototype
-date: 2020-08-04 11:32:31
+date: 2019-03-22 11:32:31
 tags: JavaScript
 categories:
   - JavaScript
