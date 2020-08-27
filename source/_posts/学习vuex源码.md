@@ -1,9 +1,11 @@
 ---
+layout: /archives
 title: 学习vuex源码
 date: 2020-08-27 17:43:10
 tags: Vue
 categories:
   - JavaScript
+  - Vue
 ---
 > 这一篇主要是讲解<code>vuex</code>的大概实现，以及一些细节的说明。
 
