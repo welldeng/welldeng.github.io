@@ -1,0 +1,55 @@
+#avatar:
+#  url: /images/avatar.jpg # 头像图片地址
+#  rounded: true
+#  opacity: 1
+
+#colors:
+#  primary: "#000000"
+
+banner:
+  enable: true
+  title: 前端小站
+
+avatar:
+  enable: true
+  url: /avatar.jpg
+
+favicon: /avatar.svg
+
+# Social Links.
+social:
+  - name: GitHub
+    link: https://github.com/welldeng
+    icon: icon-github-line
+    color: "#6e5494"
+  - name: 网易云音乐
+    link: https://music.163.com/#/user/home?id=247102977
+    icon: icon-netease-cloud-music-line
+    color: "#C20C0C"
+
+pages:
+
+#categories:
+#  笔记: dimgray
+
+wordcloud:
+  enable: true
+
+reward:
+  enable: false
+  icon: icon-hand-coin-line
+  comment: I'm so cute. Please give me money.
+  # url: https://github.com/YunYouJun/yunyoujun.github.io/issues/96
+  methods:
+    - name: 支付宝
+      path: https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/donate/alipay-qrcode.jpg
+      color: "#00A3EE"
+      icon: icon-alipay-line
+    - name: QQ 支付
+      path: https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/donate/qqpay-qrcode.png
+      color: "#12B7F5"
+      icon: icon-qq-line
+    - name: 微信支付
+      path: https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/donate/wechatpay-qrcode.jpg
+      color: "#2DC100"
+      icon: icon-wechat-pay-line
