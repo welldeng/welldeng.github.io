@@ -16,6 +16,9 @@ avatar:
 
 favicon: /avatar.svg
 
+github_issues:
+  enable: false
+
 # Social Links.
 social:
   - name: GitHub
