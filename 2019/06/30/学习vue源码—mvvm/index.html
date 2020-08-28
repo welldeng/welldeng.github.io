@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>学习vue源码—mvvm | Mr.Onion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这一篇主要是讲解一下vue里mvvm的原理，以及如何理解vue实现mvvm。  稍微有去了解过vue是如何双向绑定的我们都很容易知道vue是通过Object.defineProperty劫持data属性的setter和getter，但是这仅仅只是实现的一部分，在这个实现里我们还要理解dep（订阅中心）和watcher（订阅者）的概念。 dep—订阅中心dep代码在.&#x2F;src&#x2F;core&#x2F;obser">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习vue源码—mvvm">
+<meta property="og:url" content="http://yoursite.com/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/index.html">
+<meta property="og:site_name" content="Mr.Onion">
+<meta property="og:description" content="这一篇主要是讲解一下vue里mvvm的原理，以及如何理解vue实现mvvm。  稍微有去了解过vue是如何双向绑定的我们都很容易知道vue是通过Object.defineProperty劫持data属性的setter和getter，但是这仅仅只是实现的一部分，在这个实现里我们还要理解dep（订阅中心）和watcher（订阅者）的概念。 dep—订阅中心dep代码在.&#x2F;src&#x2F;core&#x2F;obser">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-06-30T14:43:12.000Z">
+<meta property="article:modified_time" content="2020-08-28T03:53:39.248Z">
+<meta property="article:author" content="Mr.Onion">
+<meta property="article:tag" content="Vue">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Mr.Onion" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mr.Onion</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-学习vue源码—mvvm" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/" class="article-date">
+  <time datetime="2019-06-30T14:43:12.000Z" itemprop="datePublished">2019-06-30</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaScript/">JavaScript</a>►<a class="article-category-link" href="/categories/JavaScript/Vue/">Vue</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      学习vue源码—mvvm
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>这一篇主要是讲解一下vue里mvvm的原理，以及如何理解vue实现mvvm。</p>
+</blockquote>
+<p>稍微有去了解过vue是如何双向绑定的我们都很容易知道vue是通过<code>Object.defineProperty</code>劫持<code>data</code>属性的<code>setter</code>和<code>getter</code>，但是这仅仅只是实现的一部分，在这个实现里我们还要理解<code>dep</code>（订阅中心）和<code>watcher</code>（订阅者）的概念。</p>
+<h3 id="dep—订阅中心"><a href="#dep—订阅中心" class="headerlink" title="dep—订阅中心"></a><code>dep</code>—订阅中心</h3><p><code>dep</code>代码在<code>./src/core/observer/dep.js</code>文件里，下面简单讲解一下：</p>
+<ol>
+<li><code>dep</code>的定义参考了观察者设计模式，每一个<code>dep</code>有自己的唯一标识<code>id</code>和订阅者列表<code>subs</code>。</li>
+<li><code>addSub</code>和<code>removeSub</code>用来管理订阅者列表<code>subs</code>。</li>
+<li><code>depend</code>用来收集<code>watcher</code>（订阅者）。</li>
+<li><code>notify</code>用来通知<code>watcher</code>（订阅者）执行更新。</li>
+<li><code>Dep.target</code>刚开始看是比较难理解的一个概念，<code>Dep.target</code>其实是调用当前<code>dep</code>对应属性的<code>watcher</code>。举个例子：假如<code>data</code>有个属性<code>name</code>，那么当<code>data.name</code>的<code>getter</code>被触发时，我们需要知道是谁在调用这个<code>data.name</code>的<code>getter</code>，这就是<code>Dep.target</code>。</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">export default class Dep &#123;</span><br><span class="line">  static target: ?Watcher;</span><br><span class="line">  id: number;</span><br><span class="line">  subs: Array&lt;Watcher&gt;;</span><br><span class="line"></span><br><span class="line">  constructor () &#123;</span><br><span class="line">    this.id &#x3D; uid++</span><br><span class="line">    this.subs &#x3D; []</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  addSub (sub: Watcher) &#123;</span><br><span class="line">    this.subs.push(sub)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  removeSub (sub: Watcher) &#123;</span><br><span class="line">    remove(this.subs, sub)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  depend () &#123;</span><br><span class="line">    if (Dep.target) &#123;</span><br><span class="line">      Dep.target.addDep(this)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  notify () &#123;</span><br><span class="line">    &#x2F;&#x2F; stabilize the subscriber list first</span><br><span class="line">    const subs &#x3D; this.subs.slice()</span><br><span class="line">    if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; !config.async) &#123;</span><br><span class="line">      &#x2F;&#x2F; subs aren&#39;t sorted in scheduler if not running async</span><br><span class="line">      &#x2F;&#x2F; we need to sort them now to make sure they fire in correct</span><br><span class="line">      &#x2F;&#x2F; order</span><br><span class="line">      subs.sort((a, b) &#x3D;&gt; a.id - b.id)</span><br><span class="line">    &#125;</span><br><span class="line">    for (let i &#x3D; 0, l &#x3D; subs.length; i &lt; l; i++) &#123;</span><br><span class="line">      subs[i].update()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F; The current target watcher being evaluated.</span><br><span class="line">&#x2F;&#x2F; This is globally unique because only one watcher</span><br><span class="line">&#x2F;&#x2F; can be evaluated at a time.</span><br><span class="line">Dep.target &#x3D; null</span><br><span class="line">const targetStack &#x3D; []</span><br><span class="line"></span><br><span class="line">export function pushTarget (target: ?Watcher) &#123;</span><br><span class="line">  targetStack.push(target)</span><br><span class="line">  Dep.target &#x3D; target</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">export function popTarget () &#123;</span><br><span class="line">  targetStack.pop()</span><br><span class="line">  Dep.target &#x3D; targetStack[targetStack.length - 1]</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="watcher—订阅者"><a href="#watcher—订阅者" class="headerlink" title="watcher—订阅者"></a><code>watcher</code>—订阅者</h3><p><code>watcher</code>代码在<code>./src/core/observer/watcher.js</code>文件里，关于<code>watcher</code>的选项配置就不细说了，在这里我们只需要重点关注其中的<code>get</code><br>、<code>update</code>、<code>run</code>、<code>evaluate</code>这几个方法。</p>
+<p>这几个方法的作用稍后解释，现在我们要先理解怎样才会产生一个<code>watcher</code>。在vue里面，有三种类型的<code>watcher</code>：</p>
+<ol>
+<li>每一个组件的实例都是一个<code>watcher</code></li>
+<li>在组件的<code>watch</code>选项中声明的<code>watcher</code></li>
+<li>计算属性所使用的依赖值会给对应的依赖值添加一个<code>watcher</code></li>
+</ol>
+<p>讲完<code>watcher</code>的来源后我们再来看这几个方法的讲解：</p>
+<ol>
+<li>先从<code>update</code>讲起，当某个响应属性发生变化时触发<code>setter</code>后，执行<code>dep.notify</code>通知每个<code>watcher</code>执行<code>update</code>，代码比较简单，三个逻辑分支，判断<code>this.lazy</code>，这是应用于<font color=red>计算属性</font>时会触发的逻辑分支，<code>this.sync<br></code>则用于判断同步执行<code>watcher</code>的回调，否则推入<code>queueWatcher</code>后续执行。</li>
+<li><code>run</code>和<code>evaluate</code>都是会调用<code>get</code>方法，只是<code>run</code>方法是用于组件实例的<code>watcher</code>和<code>watch</code>选项中声明的<code>watcher</code>，<code>watch</code>选项中声明的<code>watcher</code>的<code>this.user</code>为<code>true</code>，在<code>run</code>方法中的<code>this.cb.call(this.vm, value, oldValue)</code>这段代码则是我们<code>watch</code>选项中触发的回调。至于<code>evaluate</code>方法则更加简单了，调用<code>get</code>方法然后设置<code>this.dirty</code>为<code>false</code>则是为了后续其他地方使用这个计算属性的时候不需要重新计算，这也是<font color=red>计算属性缓存</font>的一部分逻辑。</li>
+<li>接下来讲讲<code>get</code>方法，<code>pushTarget(this)</code>这段则是设置<code>Dep.target</code>为当前<code>watcher</code>实例，其实就是告诉<code>dep</code>是谁在获取属性。<code>value = this.getter.call(vm, vm)</code>则是获取当前值，在这里三种类型的<code>watcher</code>的<code>getter</code>是不一样的。</li>
+<li>最后提一下，计算属性的值一般是在组件实例的<code>watcher</code>执行<code>getter</code>的过程中执行计算的。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>watcher类型</th>
+<th>getter</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>组件实例</td>
+<td>render函数</td>
+</tr>
+<tr>
+<td>watch</td>
+<td>执行parsePath方法生成的函数</td>
+</tr>
+<tr>
+<td>计算属性</td>
+<td>执行createComputedGetter方法生成的函数</td>
+</tr>
+</tbody></table>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br></pre></td><td class="code"><pre><span class="line">export default class Watcher &#123;</span><br><span class="line">  vm: Component;</span><br><span class="line">  expression: string;</span><br><span class="line">  cb: Function;</span><br><span class="line">  id: number;</span><br><span class="line">  deep: boolean;</span><br><span class="line">  user: boolean;</span><br><span class="line">  lazy: boolean;</span><br><span class="line">  sync: boolean;</span><br><span class="line">  dirty: boolean;</span><br><span class="line">  active: boolean;</span><br><span class="line">  deps: Array&lt;Dep&gt;;</span><br><span class="line">  newDeps: Array&lt;Dep&gt;;</span><br><span class="line">  depIds: SimpleSet;</span><br><span class="line">  newDepIds: SimpleSet;</span><br><span class="line">  before: ?Function;</span><br><span class="line">  getter: Function;</span><br><span class="line">  value: any;</span><br><span class="line"></span><br><span class="line">  constructor (</span><br><span class="line">    vm: Component,</span><br><span class="line">    expOrFn: string | Function,</span><br><span class="line">    cb: Function,</span><br><span class="line">    options?: ?Object,</span><br><span class="line">    isRenderWatcher?: boolean</span><br><span class="line">  ) &#123;</span><br><span class="line">    this.vm &#x3D; vm</span><br><span class="line">    if (isRenderWatcher) &#123;</span><br><span class="line">      vm._watcher &#x3D; this</span><br><span class="line">    &#125;</span><br><span class="line">    vm._watchers.push(this)</span><br><span class="line">    &#x2F;&#x2F; options</span><br><span class="line">    if (options) &#123;</span><br><span class="line">      this.deep &#x3D; !!options.deep</span><br><span class="line">      this.user &#x3D; !!options.user</span><br><span class="line">      this.lazy &#x3D; !!options.lazy</span><br><span class="line">      this.sync &#x3D; !!options.sync</span><br><span class="line">      this.before &#x3D; options.before</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      this.deep &#x3D; this.user &#x3D; this.lazy &#x3D; this.sync &#x3D; false</span><br><span class="line">    &#125;</span><br><span class="line">    this.cb &#x3D; cb</span><br><span class="line">    this.id &#x3D; ++uid &#x2F;&#x2F; uid for batching</span><br><span class="line">    this.active &#x3D; true</span><br><span class="line">    this.dirty &#x3D; this.lazy &#x2F;&#x2F; for lazy watchers</span><br><span class="line">    this.deps &#x3D; []</span><br><span class="line">    this.newDeps &#x3D; []</span><br><span class="line">    this.depIds &#x3D; new Set()</span><br><span class="line">    this.newDepIds &#x3D; new Set()</span><br><span class="line">    this.expression &#x3D; process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;</span><br><span class="line">      ? expOrFn.toString()</span><br><span class="line">      : &#39;&#39;</span><br><span class="line">    &#x2F;&#x2F; parse expression for getter</span><br><span class="line">    if (typeof expOrFn &#x3D;&#x3D;&#x3D; &#39;function&#39;) &#123;</span><br><span class="line">      this.getter &#x3D; expOrFn</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      this.getter &#x3D; parsePath(expOrFn)</span><br><span class="line">      if (!this.getter) &#123;</span><br><span class="line">        this.getter &#x3D; noop</span><br><span class="line">        process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39; &amp;&amp; warn(</span><br><span class="line">          &#96;Failed watching path: &quot;$&#123;expOrFn&#125;&quot; &#96; +</span><br><span class="line">          &#39;Watcher only accepts simple dot-delimited paths. &#39; +</span><br><span class="line">          &#39;For full control, use a function instead.&#39;,</span><br><span class="line">          vm</span><br><span class="line">        )</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    this.value &#x3D; this.lazy</span><br><span class="line">      ? undefined</span><br><span class="line">      : this.get()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Evaluate the getter, and re-collect dependencies.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  get () &#123;</span><br><span class="line">    pushTarget(this)</span><br><span class="line">    let value</span><br><span class="line">    const vm &#x3D; this.vm</span><br><span class="line">    try &#123;</span><br><span class="line">      value &#x3D; this.getter.call(vm, vm)</span><br><span class="line">    &#125; catch (e) &#123;</span><br><span class="line">      if (this.user) &#123;</span><br><span class="line">        handleError(e, vm, &#96;getter for watcher &quot;$&#123;this.expression&#125;&quot;&#96;)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        throw e</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">      &#x2F;&#x2F; &quot;touch&quot; every property so they are all tracked as</span><br><span class="line">      &#x2F;&#x2F; dependencies for deep watching</span><br><span class="line">      if (this.deep) &#123;</span><br><span class="line">        traverse(value)</span><br><span class="line">      &#125;</span><br><span class="line">      popTarget()</span><br><span class="line">      this.cleanupDeps()</span><br><span class="line">    &#125;</span><br><span class="line">    return value</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Add a dependency to this directive.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  addDep (dep: Dep) &#123;</span><br><span class="line">    const id &#x3D; dep.id</span><br><span class="line">    if (!this.newDepIds.has(id)) &#123;</span><br><span class="line">      this.newDepIds.add(id)</span><br><span class="line">      this.newDeps.push(dep)</span><br><span class="line">      if (!this.depIds.has(id)) &#123;</span><br><span class="line">        dep.addSub(this)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Clean up for dependency collection.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  cleanupDeps () &#123;</span><br><span class="line">    let i &#x3D; this.deps.length</span><br><span class="line">    while (i--) &#123;</span><br><span class="line">      const dep &#x3D; this.deps[i]</span><br><span class="line">      if (!this.newDepIds.has(dep.id)) &#123;</span><br><span class="line">        dep.removeSub(this)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    let tmp &#x3D; this.depIds</span><br><span class="line">    this.depIds &#x3D; this.newDepIds</span><br><span class="line">    this.newDepIds &#x3D; tmp</span><br><span class="line">    this.newDepIds.clear()</span><br><span class="line">    tmp &#x3D; this.deps</span><br><span class="line">    this.deps &#x3D; this.newDeps</span><br><span class="line">    this.newDeps &#x3D; tmp</span><br><span class="line">    this.newDeps.length &#x3D; 0</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Subscriber interface.</span><br><span class="line">   * Will be called when a dependency changes.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  update () &#123;</span><br><span class="line">    &#x2F;* istanbul ignore else *&#x2F;</span><br><span class="line">    if (this.lazy) &#123;</span><br><span class="line">      this.dirty &#x3D; true</span><br><span class="line">    &#125; else if (this.sync) &#123;</span><br><span class="line">      this.run()</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      queueWatcher(this)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Scheduler job interface.</span><br><span class="line">   * Will be called by the scheduler.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  run () &#123;</span><br><span class="line">    if (this.active) &#123;</span><br><span class="line">      const value &#x3D; this.get()</span><br><span class="line">      if (</span><br><span class="line">        value !&#x3D;&#x3D; this.value ||</span><br><span class="line">        &#x2F;&#x2F; Deep watchers and watchers on Object&#x2F;Arrays should fire even</span><br><span class="line">        &#x2F;&#x2F; when the value is the same, because the value may</span><br><span class="line">        &#x2F;&#x2F; have mutated.</span><br><span class="line">        isObject(value) ||</span><br><span class="line">        this.deep</span><br><span class="line">      ) &#123;</span><br><span class="line">        &#x2F;&#x2F; set new value</span><br><span class="line">        const oldValue &#x3D; this.value</span><br><span class="line">        this.value &#x3D; value</span><br><span class="line">        if (this.user) &#123;</span><br><span class="line">          try &#123;</span><br><span class="line">            this.cb.call(this.vm, value, oldValue)</span><br><span class="line">          &#125; catch (e) &#123;</span><br><span class="line">            handleError(e, this.vm, &#96;callback for watcher &quot;$&#123;this.expression&#125;&quot;&#96;)</span><br><span class="line">          &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">          this.cb.call(this.vm, value, oldValue)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Evaluate the value of the watcher.</span><br><span class="line">   * This only gets called for lazy watchers.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  evaluate () &#123;</span><br><span class="line">    this.value &#x3D; this.get()</span><br><span class="line">    this.dirty &#x3D; false</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Depend on all deps collected by this watcher.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  depend () &#123;</span><br><span class="line">    let i &#x3D; this.deps.length</span><br><span class="line">    while (i--) &#123;</span><br><span class="line">      this.deps[i].depend()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;**</span><br><span class="line">   * Remove self from all dependencies&#39; subscriber list.</span><br><span class="line">   *&#x2F;</span><br><span class="line">  teardown () &#123;</span><br><span class="line">    if (this.active) &#123;</span><br><span class="line">      &#x2F;&#x2F; remove self from vm&#39;s watcher list</span><br><span class="line">      &#x2F;&#x2F; this is a somewhat expensive operation so we skip it</span><br><span class="line">      &#x2F;&#x2F; if the vm is being destroyed.</span><br><span class="line">      if (!this.vm._isBeingDestroyed) &#123;</span><br><span class="line">        remove(this.vm._watchers, this)</span><br><span class="line">      &#125;</span><br><span class="line">      let i &#x3D; this.deps.length</span><br><span class="line">      while (i--) &#123;</span><br><span class="line">        this.deps[i].removeSub(this)</span><br><span class="line">      &#125;</span><br><span class="line">      this.active &#x3D; false</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>其实学习vue的mvvm，重点在于<code>dep</code>和<code>watcher</code>的理解，要明白这两个类的实例在双向绑定的过程中扮演的是一个什么样角色，单纯从代码上可能不太容易理解这样设计的意图，但是如果能有一个比较具象化的东西来对应，相信对你的理解会有非常大的帮助。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/" data-id="ckedpbrup000w1zm1bccs8iv3" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/07/07/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94nextTick/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          学习vue源码—nextTick
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/06/23/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94vue-diff/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">学习vue源码—vue-diff</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/CSS/">CSS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/Vue/">Vue</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Node-js/">Node.js</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CSS/" rel="tag">CSS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Node-js/" rel="tag">Node.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/CSS/" style="font-size: 10px;">CSS</a> <a href="/tags/HTTP/" style="font-size: 15px;">HTTP</a> <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Node-js/" style="font-size: 10px;">Node.js</a> <a href="/tags/Vue/" style="font-size: 20px;">Vue</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">八月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/">JS数据类型判断</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/10/CSS%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/">CSS容易忽略的一些知识点</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/15/%E5%AD%A6%E4%B9%A0vuex%E6%BA%90%E7%A0%81/">学习vuex源码</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/07/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94nextTick/">学习vue源码—nextTick</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/">学习vue源码—mvvm</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Mr.Onion<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>学习vue源码—vue-diff | Mr.Onion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文主要记录vue-diff的原理以及说明一个响应式数据更新的流程是怎么样的一个过程。  1. 数据改变到页面渲染的过程是怎么样的？首先看下面的图片👇，这是执行click函数改变一个数据之后发生的函数调用栈，从图上的说明可以比较清楚个了解这个响应式过程的大概流程。下面简单讲解一下：  改变数据，触发这个被劫持过的数据的setter方法 执行这个数据的订阅中心（dep）的notify方法 upd">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习vue源码—vue-diff">
+<meta property="og:url" content="http://yoursite.com/2019/06/23/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94vue-diff/index.html">
+<meta property="og:site_name" content="Mr.Onion">
+<meta property="og:description" content="本文主要记录vue-diff的原理以及说明一个响应式数据更新的流程是怎么样的一个过程。  1. 数据改变到页面渲染的过程是怎么样的？首先看下面的图片👇，这是执行click函数改变一个数据之后发生的函数调用栈，从图上的说明可以比较清楚个了解这个响应式过程的大概流程。下面简单讲解一下：  改变数据，触发这个被劫持过的数据的setter方法 执行这个数据的订阅中心（dep）的notify方法 upd">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/6/23/16b83a2e38faea15?w=1016&h=1066&f=png&s=181273">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/6/23/16b84467afb18dfd?w=1458&h=632&f=png&s=186334">
+<meta property="article:published_time" content="2019-06-23T14:40:48.000Z">
+<meta property="article:modified_time" content="2020-08-28T03:53:39.248Z">
+<meta property="article:author" content="Mr.Onion">
+<meta property="article:tag" content="Vue">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-gold-cdn.xitu.io/2019/6/23/16b83a2e38faea15?w=1016&h=1066&f=png&s=181273">
+  
+    <link rel="alternate" href="/atom.xml" title="Mr.Onion" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mr.Onion</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-学习vue源码—vue-diff" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/23/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94vue-diff/" class="article-date">
+  <time datetime="2019-06-23T14:40:48.000Z" itemprop="datePublished">2019-06-23</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaScript/">JavaScript</a>►<a class="article-category-link" href="/categories/JavaScript/Vue/">Vue</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      学习vue源码—vue-diff
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>本文主要记录vue-diff的原理以及说明一个响应式数据更新的流程是怎么样的一个过程。</p>
+</blockquote>
+<h2 id="1-数据改变到页面渲染的过程是怎么样的？"><a href="#1-数据改变到页面渲染的过程是怎么样的？" class="headerlink" title="1. 数据改变到页面渲染的过程是怎么样的？"></a>1. 数据改变到页面渲染的过程是怎么样的？</h2><p>首先看下面的图片👇，这是执行click函数改变一个数据之后发生的函数调用栈，从图上的说明可以比较清楚个了解这个响应式过程的大概流程。下面简单讲解一下：</p>
+<ol>
+<li>改变数据，触发这个被劫持过的数据的<code>setter</code>方法</li>
+<li>执行这个数据的订阅中心（<code>dep</code>）的<code>notify</code>方法</li>
+<li><code>update</code>方法里执行<code>queueWatcher</code>方法把<code>watcher</code>推入队列</li>
+<li>执行<code>nextTick</code>方法开始更新视图</li>
+<li><code>run</code>方法里设置<code>dep.target</code>为当前订阅对象</li>
+<li>调用<code>get</code>方法调用当前<code>watcher</code>的<code>getter</code>执行更新方法</li>
+<li><code>updateComponent</code>方法里调用了<code>render</code>方法开始执行渲染页面</li>
+<li><code>patch</code>、<code>patchVnode</code>、<code>updateChildren</code>方法都是比较VNode更新渲染的函数，不过重点的diff过程在<code>updateChildren</code>方法里。<br><img src="https://user-gold-cdn.xitu.io/2019/6/23/16b83a2e38faea15?w=1016&h=1066&f=png&s=181273"></li>
+</ol>
+<h2 id="2-vue-diff的具体实现"><a href="#2-vue-diff的具体实现" class="headerlink" title="2. vue-diff的具体实现"></a>2. vue-diff的具体实现</h2><p><code>patchVnode</code>、<code>updateChildren</code>方法在vue源码项目的<code>src/core/vdom/patch.js</code>文件中。</p>
+<p>先介绍<code>patchVnode</code>方法，这是执行真正更新dom的方法，大概的执行逻辑如下</p>
+<ol>
+<li>判断vnode和oldVnode是否相等</li>
+<li>判断是否能重用vnode</li>
+<li>判断是否执行回调</li>
+<li>判断是否有children需要diff更新</li>
+<li>判断执行更新类型—新增dom、移除dom、更新textDom</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">function patchVnode (</span><br><span class="line">  oldVnode,</span><br><span class="line">  vnode,</span><br><span class="line">  insertedVnodeQueue,</span><br><span class="line">  ownerArray,</span><br><span class="line">  index,</span><br><span class="line">  removeOnly</span><br><span class="line">) &#123;</span><br><span class="line">  if (oldVnode &#x3D;&#x3D;&#x3D; vnode) &#123;</span><br><span class="line">    return</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (isDef(vnode.elm) &amp;&amp; isDef(ownerArray)) &#123;</span><br><span class="line">    &#x2F;&#x2F; clone reused vnode</span><br><span class="line">    vnode &#x3D; ownerArray[index] &#x3D; cloneVNode(vnode)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  const elm &#x3D; vnode.elm &#x3D; oldVnode.elm</span><br><span class="line"></span><br><span class="line">  if (isTrue(oldVnode.isAsyncPlaceholder)) &#123;</span><br><span class="line">    if (isDef(vnode.asyncFactory.resolved)) &#123;</span><br><span class="line">      hydrate(oldVnode.elm, vnode, insertedVnodeQueue)</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      vnode.isAsyncPlaceholder &#x3D; true</span><br><span class="line">    &#125;</span><br><span class="line">    return</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  &#x2F;&#x2F; reuse element for static trees.</span><br><span class="line">  &#x2F;&#x2F; note we only do this if the vnode is cloned -</span><br><span class="line">  &#x2F;&#x2F; if the new node is not cloned it means the render functions have been</span><br><span class="line">  &#x2F;&#x2F; reset by the hot-reload-api and we need to do a proper re-render.</span><br><span class="line">  if (isTrue(vnode.isStatic) &amp;&amp;</span><br><span class="line">    isTrue(oldVnode.isStatic) &amp;&amp;</span><br><span class="line">    vnode.key &#x3D;&#x3D;&#x3D; oldVnode.key &amp;&amp;</span><br><span class="line">    (isTrue(vnode.isCloned) || isTrue(vnode.isOnce))</span><br><span class="line">  ) &#123;</span><br><span class="line">    vnode.componentInstance &#x3D; oldVnode.componentInstance</span><br><span class="line">    return</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  let i</span><br><span class="line">  const data &#x3D; vnode.data</span><br><span class="line">  if (isDef(data) &amp;&amp; isDef(i &#x3D; data.hook) &amp;&amp; isDef(i &#x3D; i.prepatch)) &#123;</span><br><span class="line">    i(oldVnode, vnode)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  const oldCh &#x3D; oldVnode.children</span><br><span class="line">  const ch &#x3D; vnode.children</span><br><span class="line">  if (isDef(data) &amp;&amp; isPatchable(vnode)) &#123;</span><br><span class="line">    for (i &#x3D; 0; i &lt; cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)</span><br><span class="line">    if (isDef(i &#x3D; data.hook) &amp;&amp; isDef(i &#x3D; i.update)) i(oldVnode, vnode)</span><br><span class="line">  &#125;</span><br><span class="line">  if (isUndef(vnode.text)) &#123;</span><br><span class="line">    if (isDef(oldCh) &amp;&amp; isDef(ch)) &#123;</span><br><span class="line">      if (oldCh !&#x3D;&#x3D; ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)</span><br><span class="line">    &#125; else if (isDef(ch)) &#123;</span><br><span class="line">      if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;) &#123;</span><br><span class="line">        checkDuplicateKeys(ch)</span><br><span class="line">      &#125;</span><br><span class="line">      if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, &#39;&#39;)</span><br><span class="line">      addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)</span><br><span class="line">    &#125; else if (isDef(oldCh)) &#123;</span><br><span class="line">      removeVnodes(oldCh, 0, oldCh.length - 1)</span><br><span class="line">    &#125; else if (isDef(oldVnode.text)) &#123;</span><br><span class="line">      nodeOps.setTextContent(elm, &#39;&#39;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; else if (oldVnode.text !&#x3D;&#x3D; vnode.text) &#123;</span><br><span class="line">    nodeOps.setTextContent(elm, vnode.text)</span><br><span class="line">  &#125;</span><br><span class="line">  if (isDef(data)) &#123;</span><br><span class="line">    if (isDef(i &#x3D; data.hook) &amp;&amp; isDef(i &#x3D; i.postpatch)) i(oldVnode, vnode)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来就是我们经常说的vue-diff所在的方法<code>updateChildren</code>，先从参数说起，分别是父元素dom，旧的vnode-list，新的vnode-list，需要插入的vnode队列，是否仅移除。</p>
+<p>重点的逻辑在<code>while</code>循环里：</p>
+<p>如何理解这个diff逻辑，其实是分别有新旧两个vnode-list，两个list都设定第一位和最后一位作为两个游标，通过一系列判断对比，不断逼近，当两个list的两个游标相交则循环结束。</p>
+<p>至于具体判断的逻辑就不赘述了，代码已经写得非常清楚了，在这里比较有意思的<code>sameVnode</code>的判断，在使用<code>v-for</code>生成的vnode-list不设置<code>key</code>的时候，所有的对比更新几乎都会从第三和第四个判断分支进行，即代码中的<code>sameVnode(oldStartVnode, newStartVnode)</code>和<code>sameVnode(oldEndVnode, newEndVnode)</code>判断，下面看看<code>sameVnode</code>的方法，当我们不设置key的时候，判断的逻辑会通过tag类型和vnode的数据某些属性进行比较，通常来说都是相同的，这就是官方文档说的<font color=red>原地复用</font>逻辑，直接更新当前节点的内容，不需要对当前的节点进行移动。这对于节点内容相对简单的来说默认会更高效，但是当节点内容相对复杂的时候我们就需要对节点内容进行复用而不是重新生成，这时候我们就需要设置<code>key</code>来复用节点。</p>
+<p>最后的一段判断<code>oldStartIdx > oldEndIdx</code>和<code>newStartIdx > newEndIdx</code>则说明符合这两个条件的时候我们当前vnode-list是从无到有或从有到无的变化。</p>
+<p>图示：官方文档的说明（👇）</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/6/23/16b84467afb18dfd?w=1458&h=632&f=png&s=186334"></p>
+<p><code>sameVnode</code>方法定义</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">function sameVnode (a, b) &#123;</span><br><span class="line">  return (</span><br><span class="line">    a.key &#x3D;&#x3D;&#x3D; b.key &amp;&amp; (</span><br><span class="line">      (</span><br><span class="line">        a.tag &#x3D;&#x3D;&#x3D; b.tag &amp;&amp;</span><br><span class="line">        a.isComment &#x3D;&#x3D;&#x3D; b.isComment &amp;&amp;</span><br><span class="line">        isDef(a.data) &#x3D;&#x3D;&#x3D; isDef(b.data) &amp;&amp;</span><br><span class="line">        sameInputType(a, b)</span><br><span class="line">      ) || (</span><br><span class="line">        isTrue(a.isAsyncPlaceholder) &amp;&amp;</span><br><span class="line">        a.asyncFactory &#x3D;&#x3D;&#x3D; b.asyncFactory &amp;&amp;</span><br><span class="line">        isUndef(b.asyncFactory.error)</span><br><span class="line">      )</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>updateChildren</code>方法定义</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line">function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) &#123;</span><br><span class="line">  let oldStartIdx &#x3D; 0</span><br><span class="line">  let newStartIdx &#x3D; 0</span><br><span class="line">  let oldEndIdx &#x3D; oldCh.length - 1</span><br><span class="line">  let oldStartVnode &#x3D; oldCh[0]</span><br><span class="line">  let oldEndVnode &#x3D; oldCh[oldEndIdx]</span><br><span class="line">  let newEndIdx &#x3D; newCh.length - 1</span><br><span class="line">  let newStartVnode &#x3D; newCh[0]</span><br><span class="line">  let newEndVnode &#x3D; newCh[newEndIdx]</span><br><span class="line">  let oldKeyToIdx, idxInOld, vnodeToMove, refElm</span><br><span class="line"></span><br><span class="line">  &#x2F;&#x2F; removeOnly is a special flag used only by &lt;transition-group&gt;</span><br><span class="line">  &#x2F;&#x2F; to ensure removed elements stay in correct relative positions</span><br><span class="line">  &#x2F;&#x2F; during leaving transitions</span><br><span class="line">  const canMove &#x3D; !removeOnly</span><br><span class="line"></span><br><span class="line">  if (process.env.NODE_ENV !&#x3D;&#x3D; &#39;production&#39;) &#123;</span><br><span class="line">    checkDuplicateKeys(newCh)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  while (oldStartIdx &lt;&#x3D; oldEndIdx &amp;&amp; newStartIdx &lt;&#x3D; newEndIdx) &#123;</span><br><span class="line">    if (isUndef(oldStartVnode)) &#123;</span><br><span class="line">      oldStartVnode &#x3D; oldCh[++oldStartIdx] &#x2F;&#x2F; Vnode has been moved left</span><br><span class="line">    &#125; else if (isUndef(oldEndVnode)) &#123;</span><br><span class="line">      oldEndVnode &#x3D; oldCh[--oldEndIdx]</span><br><span class="line">    &#125; else if (sameVnode(oldStartVnode, newStartVnode)) &#123;</span><br><span class="line">      patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)</span><br><span class="line">      oldStartVnode &#x3D; oldCh[++oldStartIdx]</span><br><span class="line">      newStartVnode &#x3D; newCh[++newStartIdx]</span><br><span class="line">    &#125; else if (sameVnode(oldEndVnode, newEndVnode)) &#123;</span><br><span class="line">      patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)</span><br><span class="line">      oldEndVnode &#x3D; oldCh[--oldEndIdx]</span><br><span class="line">      newEndVnode &#x3D; newCh[--newEndIdx]</span><br><span class="line">    &#125; else if (sameVnode(oldStartVnode, newEndVnode)) &#123; &#x2F;&#x2F; Vnode moved right</span><br><span class="line">      patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)</span><br><span class="line">      canMove &amp;&amp; nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))</span><br><span class="line">      oldStartVnode &#x3D; oldCh[++oldStartIdx]</span><br><span class="line">      newEndVnode &#x3D; newCh[--newEndIdx]</span><br><span class="line">    &#125; else if (sameVnode(oldEndVnode, newStartVnode)) &#123; &#x2F;&#x2F; Vnode moved left</span><br><span class="line">      patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)</span><br><span class="line">      canMove &amp;&amp; nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)</span><br><span class="line">      oldEndVnode &#x3D; oldCh[--oldEndIdx]</span><br><span class="line">      newStartVnode &#x3D; newCh[++newStartIdx]</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      if (isUndef(oldKeyToIdx)) oldKeyToIdx &#x3D; createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)</span><br><span class="line">      idxInOld &#x3D; isDef(newStartVnode.key)</span><br><span class="line">        ? oldKeyToIdx[newStartVnode.key]</span><br><span class="line">        : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx)</span><br><span class="line">      if (isUndef(idxInOld)) &#123; &#x2F;&#x2F; New element</span><br><span class="line">        createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        vnodeToMove &#x3D; oldCh[idxInOld]</span><br><span class="line">        if (sameVnode(vnodeToMove, newStartVnode)) &#123;</span><br><span class="line">          patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)</span><br><span class="line">          oldCh[idxInOld] &#x3D; undefined</span><br><span class="line">          canMove &amp;&amp; nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm)</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">          &#x2F;&#x2F; same key but different element. treat as new element</span><br><span class="line">          createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      newStartVnode &#x3D; newCh[++newStartIdx]</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  if (oldStartIdx &gt; oldEndIdx) &#123;</span><br><span class="line">    refElm &#x3D; isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm</span><br><span class="line">    addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)</span><br><span class="line">  &#125; else if (newStartIdx &gt; newEndIdx) &#123;</span><br><span class="line">    removeVnodes(oldCh, oldStartIdx, oldEndIdx)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>其实vue-diff的算法并不复杂，代码阅读起来也相对容易。在vue里从patch到视图的变化是实时的，即假如存在3个节点变化，vue并不是收集完所有的patch再一次性更新视图，而是在遍历diff的过程中patch直接更新视图。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/06/23/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94vue-diff/" data-id="ckedpbrur00131zm1cfntgzu1" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          学习vue源码—mvvm
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/06/16/%E5%AD%A6%E4%B9%A0vue-router%E6%BA%90%E7%A0%81%E8%AE%B0%E5%BD%95-2/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">学习vue-router源码记录-2</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/CSS/">CSS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/Vue/">Vue</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Node-js/">Node.js</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CSS/" rel="tag">CSS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Node-js/" rel="tag">Node.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/CSS/" style="font-size: 10px;">CSS</a> <a href="/tags/HTTP/" style="font-size: 15px;">HTTP</a> <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Node-js/" style="font-size: 10px;">Node.js</a> <a href="/tags/Vue/" style="font-size: 20px;">Vue</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">八月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/">JS数据类型判断</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/10/CSS%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/">CSS容易忽略的一些知识点</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/15/%E5%AD%A6%E4%B9%A0vuex%E6%BA%90%E7%A0%81/">学习vuex源码</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/07/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94nextTick/">学习vue源码—nextTick</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/">学习vue源码—mvvm</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Mr.Onion<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

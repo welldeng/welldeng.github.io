@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>前端的安全问题与防御策略 | Mr.Onion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="在前端的开发中，安全是我们必须要了解的一环，即使前端很难说有真正的安全，但是了解这些攻击有助于我们如何去规避问题，毕竟安全问题都是需要提前预防，而不能等到真正发生的时候才来解决。  ClickJacking（点击劫持）1.什么是ClickJacking？ ClickJacking（点击劫持）是一种视觉上的欺骗手段。大概有两种方式，一是攻击者使用一个透明的iframe，覆盖在一个网页上，然后诱使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="前端的安全问题与防御策略">
+<meta property="og:url" content="http://yoursite.com/2019/05/12/%E5%89%8D%E7%AB%AF%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98%E4%B8%8E%E9%98%B2%E5%BE%A1%E7%AD%96%E7%95%A5/index.html">
+<meta property="og:site_name" content="Mr.Onion">
+<meta property="og:description" content="在前端的开发中，安全是我们必须要了解的一环，即使前端很难说有真正的安全，但是了解这些攻击有助于我们如何去规避问题，毕竟安全问题都是需要提前预防，而不能等到真正发生的时候才来解决。  ClickJacking（点击劫持）1.什么是ClickJacking？ ClickJacking（点击劫持）是一种视觉上的欺骗手段。大概有两种方式，一是攻击者使用一个透明的iframe，覆盖在一个网页上，然后诱使用">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-05-12T14:44:09.000Z">
+<meta property="article:modified_time" content="2020-08-28T03:53:39.248Z">
+<meta property="article:author" content="Mr.Onion">
+<meta property="article:tag" content="HTTP">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Mr.Onion" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mr.Onion</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-前端的安全问题与防御策略" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/05/12/%E5%89%8D%E7%AB%AF%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98%E4%B8%8E%E9%98%B2%E5%BE%A1%E7%AD%96%E7%95%A5/" class="article-date">
+  <time datetime="2019-05-12T14:44:09.000Z" itemprop="datePublished">2019-05-12</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/HTTP/">HTTP</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      前端的安全问题与防御策略
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>在前端的开发中，安全是我们必须要了解的一环，即使前端很难说有真正的安全，但是了解这些攻击有助于我们如何去规避问题，毕竟安全问题都是需要提前预防，而不能等到真正发生的时候才来解决。</p>
+</blockquote>
+<h2 id="ClickJacking（点击劫持）"><a href="#ClickJacking（点击劫持）" class="headerlink" title="ClickJacking（点击劫持）"></a>ClickJacking（点击劫持）</h2><p>1.什么是ClickJacking？</p>
+<p><font color="blue">ClickJacking（点击劫持）</font>是一种视觉上的欺骗手段。大概有两种方式，一是攻击者使用一个透明的iframe，覆盖在一个网页上，然后诱使用户在该页面上进行操作，此时用户将在不知情的情况下点击透明的iframe页面；二是攻击者使用一张图片覆盖在网页，遮挡网页原有位置的含义。</p>
+<p>2.如何防御ClickJacking</p>
+<p>对于第一种情况我们可以通过设置http响应头标记X-Frame-Option来防止点击劫持。</p>
+<p><font color="blue">X-Frame-Options</font>：X-Frame-Options HTTP 响应头是用来给浏览器指示允许一个页面可否在&lt;frame&gt;,&lt;iframe&gt;或者&lt;object&gt;中展现的标记。网站可以使用此功能，来确保自己网站的内容没有被嵌到别人的网站中去，也从而避免了点击劫持 (clickjacking) 的攻击。</p>
+<table>
+<thead>
+<tr>
+<th>标记值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DENY</td>
+<td>表示该页面不允许在 frame 中展示，即便是在相同域名的页面中嵌套也不允许。</td>
+</tr>
+<tr>
+<td>SAMEORIGIN</td>
+<td>表示该页面可以在相同域名页面的 frame 中展示。</td>
+</tr>
+<tr>
+<td>ALLOW-FROM uri</td>
+<td>表示该页面可以在指定来源的 frame 中展示。</td>
+</tr>
+</tbody></table>
+<p>除此之外我们还可以使用CSP（Content-Security-Policy）里的frame-ancestors或frame-src来指定页面允许嵌入哪些页面。</p>
+<p>对于不使用X-Frame—Options或CSP，参考网上的解决方法，在打开页面的时候检查一下window.top和window.self是否相等来决定是否重定向。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if (window.self !&#x3D; window.top) &#123;</span><br><span class="line">    top.location.href &#x3D; self.location.href</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至于第二种情况使用图片遮挡网页原有位置的含义，这种站点本身就是一个恶意站点，而不是来自第三方的攻击，这里不做讨论。</p>
+<h2 id="CSRF（跨站伪造请求）"><a href="#CSRF（跨站伪造请求）" class="headerlink" title="CSRF（跨站伪造请求）"></a>CSRF（跨站伪造请求）</h2><p>1.什么是CSRF？</p>
+<p><font color="blue">CSRF（跨站伪造请求）</font>全称为 Cross-site request forgery，CSRF是通过伪装成受信任用户的请求来利用受信任的网站。例如：一位用户在站点A登录了，并且站点A把信息存储在用户本地，之后当用户打开站点B，站点B的恶意代码窃取了这位用户在站点A的个人用户信息，就可以假装成这位用户去请求站点A。</p>
+<p>2.如何防御CSRF</p>
+<ul>
+<li>cookie不存储重要信息</li>
+<li>cookie设置httpOnly，secure，此外path和domain尽量不使用默认值</li>
+<li>cookie设置SameSite（这个属性还不是一个规范，不确定是否有用）</li>
+<li>服务端增加多重安全校验</li>
+<li>使用https协议或其他安全协议发送请求</li>
+</ul>
+<h2 id="XSS（跨站脚本攻击）"><a href="#XSS（跨站脚本攻击）" class="headerlink" title="XSS（跨站脚本攻击）"></a>XSS（跨站脚本攻击）</h2><p>1.什么是XSS？</p>
+<p><font color="blue">XSS（跨站脚本攻击）</font>全称为Cross Site Scripting，为了和CSS文件（Cascading Style Sheets）区分，故称为XSS。XSS通过往Web页面插入恶意代码，当用户访问该页面时，执行嵌入的恶意代码，以此来达到恶意攻击用户的目的。</p>
+<p>XSS攻击又分为存储型和反射型。</p>
+<p>存储型：一般是指我们页面中表单提交的数据存在恶意代码被存储到数据库中。</p>
+<p>反射型：需要欺骗用户自己去点击链接才能触发XSS代码</p>
+<p>2.如何防御XSS</p>
+<ul>
+<li>CSP（Content-Security-Policy）</li>
+</ul>
+<p><font color="blue">CSP（Content-Security-Policy）</font>允许站点管理者在指定的页面控制用户代理的资源。</p>
+<p>设置CSP可以极大程度上提高页面安全，CSP允许我们设置一套非常完善的资源允许请求规则，在此只大概罗列几个。</p>
+<table>
+<thead>
+<tr>
+<th>标记值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>script-src</td>
+<td>限制javascript 源。</td>
+</tr>
+<tr>
+<td>style-src</td>
+<td>限制层叠样式表文件源。</td>
+</tr>
+<tr>
+<td>img-src</td>
+<td>限制图片和图标源。</td>
+</tr>
+<tr>
+<td>media-src</td>
+<td>限制通过&lt;audio&gt; 或&lt;video&gt; 标签加载的媒体文件源。</td>
+</tr>
+</tbody></table>
+<ul>
+<li>SRI（Subresource Integrity）</li>
+</ul>
+<p>在项目中我们可能会引入一些第三方的文件，因为文件在第三方的服务器里，理论上第三方是有可能篡改文件对使用第三方的文件的站点进行攻击。在这种情况下我们可以使用SRI来保证我们引入的文件不被篡改。</p>
+<p><font color="blue">SRI（子资源完整性 Subresource Integrity ）</font>用于让浏览器检查所下载的来自第三方的资源（例如 CDN）未被恶意篡改。它使用哈希值检查确保第三方资源的完整性。只要开发者提供了被需下载资源的哈希值，浏览器就可以检查实际下载的文件是否与预期的哈希值匹配。</p>
+<p>如何使用SRI？只需给 script 或 style 标签添加<font color="red" size="4">integrity</font>属性即可。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script crossorigin&#x3D;&quot;anonymous&quot; integrity&#x3D;&quot;shaxxx-xxxxxx&quot; src&#x3D;&quot;xxx.com&#x2F;xxx.js&quot;&gt;&lt;&#x2F;script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>要注意的是因为浏览器需要下载资源内容进行计算，所以如果引用第三方的文件需要第三方服务器支持<font>跨域请求（CORS）</font>，客户端则需要加上<font color="red" size="4">crossorigin=”anonymous”</font>属性。</p>
+<p>另外，我们还可以使用CSP设置<font color="red" size="4">require-sri-for</font>强制页面请求js或css文件使用SRI。</p>
+<ul>
+<li>X-XSS-Protection</li>
+</ul>
+<p><font color="blue">X-XSS-Protection</font>响应头是浏览器检测到页面存在XSS攻击时，设置浏览器的行为。通常默认值为1，检测到XSS攻击浏览器将会删除不安全的部分。</p>
+<table>
+<thead>
+<tr>
+<th>标记值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>禁止XSS过滤。</td>
+</tr>
+<tr>
+<td>1</td>
+<td>启用XSS过滤（通常浏览器是默认的）。 如果检测到跨站脚本攻击，浏览器将清除页面（删除不安全的部分）。</td>
+</tr>
+<tr>
+<td>1; mode=block</td>
+<td>启用XSS过滤。 如果检测到攻击，浏览器将不会清除页面，而是阻止页面加载。</td>
+</tr>
+<tr>
+<td>1; report=&lt;reporting-uri&gt;</td>
+<td>启用XSS过滤。 如果检测到跨站脚本攻击，浏览器将清除页面并使用CSP report-uri指令的功能发送违规报告。</td>
+</tr>
+</tbody></table>
+<ul>
+<li>对提交的数据encode或过滤</li>
+</ul>
+<p>在页面里提交的数据需要存储到数据库的场景下，我们需要对提交的数据进行encode或者某些特殊字符进行过滤，特别是某些数据我们需要用在src或href里使用的情况。</p>
+<p>除此之外，富文本也是XSS经常发生的重灾区，对于富文本提交的数据是一定要进行过滤的。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上文所述基本上是我们前端里常见的安全问题，其实对于前端来说很难有真正的安全所言，毕竟我们的代码都是明文跑在浏览器上。</p>
+<p>而现在基本上不使用https协议的请求全部都是不安全的，对于页面上数据提交进行过滤校验也是常规操作，大部分场景我们都是使用浏览器的机制来帮助我们防御攻击，增加第三方攻击的成本。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/05/12/%E5%89%8D%E7%AB%AF%E7%9A%84%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98%E4%B8%8E%E9%98%B2%E5%BE%A1%E7%AD%96%E7%95%A5/" data-id="ckedpbrud00081zm126ha4dkv" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/05/18/%E4%B8%80%E7%AF%87%E6%96%87%E7%AB%A0%E5%B8%A6%E4%BD%A0%E7%90%86%E8%A7%A3HTTP%E7%BC%93%E5%AD%98/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          一篇文章带你理解HTTP缓存
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/04/27/%E5%AD%A6%E4%B9%A0%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%8F%91%E5%B8%83-%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">学习观察者模式与发布-订阅模式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/CSS/">CSS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/Vue/">Vue</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Node-js/">Node.js</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CSS/" rel="tag">CSS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Node-js/" rel="tag">Node.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/CSS/" style="font-size: 10px;">CSS</a> <a href="/tags/HTTP/" style="font-size: 15px;">HTTP</a> <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Node-js/" style="font-size: 10px;">Node.js</a> <a href="/tags/Vue/" style="font-size: 20px;">Vue</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">八月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/">JS数据类型判断</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/10/CSS%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/">CSS容易忽略的一些知识点</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/15/%E5%AD%A6%E4%B9%A0vuex%E6%BA%90%E7%A0%81/">学习vuex源码</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/07/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94nextTick/">学习vue源码—nextTick</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/">学习vue源码—mvvm</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Mr.Onion<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

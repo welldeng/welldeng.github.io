@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>JS数据类型判断 | Mr.Onion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前端数据类型判断 前端数据类型判断在开发过程中经常会遇到，那么我们又该怎么判断各种不同的数据类型呢？通过阅读文章，给你一套完整的判断方法以及对前端JS里数据类型的基本了解。  数据类型javascript中的基础数据类型共有8种  string number（特殊值NaN） boolean undefined object（正则表达式、array、map、set、function属于对象类型） n">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JS数据类型判断">
+<meta property="og:url" content="http://yoursite.com/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/index.html">
+<meta property="og:site_name" content="Mr.Onion">
+<meta property="og:description" content="前端数据类型判断 前端数据类型判断在开发过程中经常会遇到，那么我们又该怎么判断各种不同的数据类型呢？通过阅读文章，给你一套完整的判断方法以及对前端JS里数据类型的基本了解。  数据类型javascript中的基础数据类型共有8种  string number（特殊值NaN） boolean undefined object（正则表达式、array、map、set、function属于对象类型） n">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-08-15T14:52:01.000Z">
+<meta property="article:modified_time" content="2020-08-28T03:53:39.248Z">
+<meta property="article:author" content="Mr.Onion">
+<meta property="article:tag" content="JavaScript">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Mr.Onion" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mr.Onion</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-JS数据类型判断" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/" class="article-date">
+  <time datetime="2020-08-15T14:52:01.000Z" itemprop="datePublished">2020-08-15</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaScript/">JavaScript</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      JS数据类型判断
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前端数据类型判断"><a href="#前端数据类型判断" class="headerlink" title="前端数据类型判断"></a><strong>前端数据类型判断</strong></h1><blockquote>
+<p>前端数据类型判断在开发过程中经常会遇到，那么我们又该怎么判断各种不同的数据类型呢？通过阅读文章，给你一套完整的判断方法以及对前端JS里数据类型的基本了解。</p>
+</blockquote>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><p>javascript中的基础数据类型共有8种</p>
+<ol>
+<li>string</li>
+<li>number（特殊值NaN）</li>
+<li>boolean</li>
+<li>undefined</li>
+<li>object（正则表达式、array、map、set、function属于对象类型）</li>
+<li>null</li>
+<li>symbol</li>
+<li>bigInt</li>
+</ol>
+<h2 id="判断方法"><a href="#判断方法" class="headerlink" title="判断方法"></a>判断方法</h2><h3 id="typeof方法判断"><a href="#typeof方法判断" class="headerlink" title="typeof方法判断"></a>typeof方法判断</h3><p>下面代码列出我们开发中经常用到的数据类型进行比较，代码如下👇</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typeof</span> <span class="number">1</span> <span class="comment">// &#x27;number&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="literal">NaN</span> <span class="comment">// &#x27;number&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="string">&#x27;1&#x27;</span> <span class="comment">// &#x27;string&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="literal">true</span> <span class="comment">// &#x27;boolean&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="literal">undefined</span> <span class="comment">// &#x27;undefined&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="literal">null</span> <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> [] <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> &#123;&#125; <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> /\d/ <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="keyword">new</span> <span class="built_in">Date</span>(<span class="string">&#x27;2020&#x27;</span>) <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="keyword">new</span> <span class="built_in">Map</span>() <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="keyword">new</span> <span class="built_in">Set</span>() <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;&#125; <span class="comment">// &#x27;function&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> <span class="built_in">Symbol</span>() <span class="comment">// &#x27;symbol&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> BigInt(<span class="number">1</span>) <span class="comment">// &#x27;bigInt&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>把结果整理成表格如下方表格展示，通过表格中的结果对比来看，使用<code>typeof</code>方法判有以下2个缺陷：</p>
+<ol>
+<li>无法区分<strong>数字</strong>和<strong>NaN</strong></li>
+<li>无法区分<strong>null</strong>、**{}<strong>、</strong>[]<strong>、</strong>/\d/<strong>、</strong>new Map()<strong>、</strong>new Set()**这些对象类型</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1、NaN</td>
+<td>number</td>
+</tr>
+<tr>
+<td>‘1’</td>
+<td>string</td>
+</tr>
+<tr>
+<td>true</td>
+<td>boolean</td>
+</tr>
+<tr>
+<td>null、{}、[]、/\d/、new Map()、new Set()</td>
+<td>object</td>
+</tr>
+<tr>
+<td>function() {}</td>
+<td>function</td>
+</tr>
+<tr>
+<td>Symbol()</td>
+<td>symbol</td>
+</tr>
+<tr>
+<td>BigInt(1)</td>
+<td>bigInt</td>
+</tr>
+</tbody></table>
+<h3 id="toString方法判断"><a href="#toString方法判断" class="headerlink" title="toString方法判断 "></a>toString方法判断 </h3><p><code>toString</code>方法是判断数据类型最精确的，下面代码列出我们开发中经常用到的数据类型进行比较，代码如下👇</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> func = <span class="function">(<span class="params">val</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">Object</span>.prototype.toString.call(val)</span><br><span class="line">&#125;</span><br><span class="line">func(<span class="number">1</span>) <span class="comment">// &#x27;[object Number]&#x27;</span></span><br><span class="line">func(<span class="literal">NaN</span>) <span class="comment">// &#x27;[object Number]&#x27;</span></span><br><span class="line">func(<span class="string">&#x27;1&#x27;</span>) <span class="comment">// &#x27;[object String]&#x27;</span></span><br><span class="line">func(<span class="literal">true</span>) <span class="comment">// &#x27;[object Boolean]&#x27;</span></span><br><span class="line">func(<span class="literal">undefined</span>) <span class="comment">// &#x27;[object Undefined]&#x27;</span></span><br><span class="line">func(<span class="literal">null</span>) <span class="comment">// &#x27;[object Null]&#x27;</span></span><br><span class="line">func([]) <span class="comment">// &#x27;[object Array]&#x27;</span></span><br><span class="line">func(&#123;&#125;) <span class="comment">// &#x27;[object Object]&#x27;</span></span><br><span class="line">func(<span class="regexp">/\d/</span>) <span class="comment">// &#x27;[object RegExp]&#x27;</span></span><br><span class="line">func(<span class="keyword">new</span> <span class="built_in">Date</span>(<span class="string">&#x27;2020&#x27;</span>)) <span class="comment">// &#x27;[object Date]&#x27;</span></span><br><span class="line">func(<span class="keyword">new</span> <span class="built_in">Map</span>()) <span class="comment">// &#x27;[object Map]&#x27;</span></span><br><span class="line">func(<span class="keyword">new</span> <span class="built_in">Set</span>()) <span class="comment">// &#x27;[object Set]&#x27;</span></span><br><span class="line">func(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;&#125;) <span class="comment">// &#x27;[object Function]&#x27;</span></span><br><span class="line">func(<span class="built_in">Symbol</span>()) <span class="comment">// &#x27;[object Symbol]&#x27;</span></span><br><span class="line">func(BigInt(<span class="number">1</span>)) <span class="comment">// &#x27;[object BigInt]&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>把结果整理成表格如下方表格展示，通过表格中的结果对比来看，使用<code>toString</code>方法判断数据类型已经接近完美，但是特殊的值<code>NaN</code>还是无法区分，不过这个数据在开发过程中还是比较少出现的，判断方法在下文补充。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1、NaN</td>
+<td>[object Number]</td>
+</tr>
+<tr>
+<td>‘1’</td>
+<td>[object String]</td>
+</tr>
+<tr>
+<td>true</td>
+<td>[object Boolean]</td>
+</tr>
+<tr>
+<td>undefined</td>
+<td>[object Undefined]</td>
+</tr>
+<tr>
+<td>null</td>
+<td>[object Null]</td>
+</tr>
+<tr>
+<td>[]</td>
+<td>[object Array]</td>
+</tr>
+<tr>
+<td>{}</td>
+<td>[object Object]</td>
+</tr>
+<tr>
+<td>/\d/</td>
+<td>[object RegExp]</td>
+</tr>
+<tr>
+<td>new Date(‘2020’)</td>
+<td>[object Date]</td>
+</tr>
+<tr>
+<td>new Map()</td>
+<td>[object Map]</td>
+</tr>
+<tr>
+<td>new Set()</td>
+<td>[object Set]</td>
+</tr>
+<tr>
+<td>function() {}</td>
+<td>[object Function]</td>
+</tr>
+<tr>
+<td>Symbol()</td>
+<td>[object Symbol]</td>
+</tr>
+<tr>
+<td>BigInt(1)</td>
+<td>[object BigInt]</td>
+</tr>
+</tbody></table>
+<h2 id="特殊点"><a href="#特殊点" class="headerlink" title="特殊点"></a>特殊点</h2><ul>
+<li><p>通过前文中整理可得，<code>NaN</code>这个特殊值无论是用<code>typeof</code>还是<code>toString</code>都无法区分，判断这个值最好使用<code>Number.isNaN</code>，该方法返还一个布尔值。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Number</span>.isNaN(<span class="literal">NaN</span>) <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>还有一类数据是使用构造函数生成，这种数据从使用<code>typeof</code>和<code>toString</code>得到的结果来看，<code>typeof</code>方法得到的结果会更准确。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> func = <span class="function">(<span class="params">val</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">Object</span>.prototype.toString.call(val)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> newStr = <span class="keyword">new</span> <span class="built_in">String</span>(<span class="string">&#x27;1&#x27;</span>)</span><br><span class="line"><span class="keyword">let</span> newNum = <span class="keyword">new</span> <span class="built_in">Number</span>(<span class="number">1</span>)</span><br><span class="line"><span class="keyword">let</span> newBool = <span class="keyword">new</span> <span class="built_in">Boolean</span>(<span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">typeof</span> newStr <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> newNum <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"><span class="keyword">typeof</span> newBool <span class="comment">// &#x27;object&#x27;</span></span><br><span class="line"></span><br><span class="line">func(newStr) <span class="comment">// &#x27;[object String]&#x27;</span></span><br><span class="line">func(newNum) <span class="comment">// &#x27;[object Number]&#x27;</span></span><br><span class="line">func(newBool) <span class="comment">// &#x27;[object Boolean]&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>从上面代码可以得到，在这个时候虽然使用<code>toString</code>方法得到的数据构造方法是正确的，但是真正的变量返回结果却是对象类型的，对于这种使用构造函数得到的返回值，结合<code>typeof</code>和<code>toString</code>一起判断是最精确的。</p>
+</li>
+<li><p>对于判断数组类型，我们还可以使用新的语法<code>Array.isArray</code>判断，返回的结果是一个布尔值。</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/" data-id="ckedpbrub00061zm16qfr1jel" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/08/10/CSS%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">CSS容易忽略的一些知识点</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/CSS/">CSS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/Vue/">Vue</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Node-js/">Node.js</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CSS/" rel="tag">CSS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Node-js/" rel="tag">Node.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/CSS/" style="font-size: 10px;">CSS</a> <a href="/tags/HTTP/" style="font-size: 15px;">HTTP</a> <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Node-js/" style="font-size: 10px;">Node.js</a> <a href="/tags/Vue/" style="font-size: 20px;">Vue</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">八月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/">JS数据类型判断</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/10/CSS%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/">CSS容易忽略的一些知识点</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/15/%E5%AD%A6%E4%B9%A0vuex%E6%BA%90%E7%A0%81/">学习vuex源码</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/07/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94nextTick/">学习vue源码—nextTick</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/">学习vue源码—mvvm</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Mr.Onion<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>

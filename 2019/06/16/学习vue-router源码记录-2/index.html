@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>学习vue-router源码记录-2 | Mr.Onion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="继上一遍文章大概介绍了vue-router里面的概念，这一篇文章主要详细介绍路由跳转中发生了什么。   路由跳转执行的代码主要在.&#x2F;base.js文件里，详细看transitionTo方法。 12345678910111213141516171819202122transitionTo (location: RawLocation, onComplete?: Function, onAbort?">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习vue-router源码记录-2">
+<meta property="og:url" content="http://yoursite.com/2019/06/16/%E5%AD%A6%E4%B9%A0vue-router%E6%BA%90%E7%A0%81%E8%AE%B0%E5%BD%95-2/index.html">
+<meta property="og:site_name" content="Mr.Onion">
+<meta property="og:description" content="继上一遍文章大概介绍了vue-router里面的概念，这一篇文章主要详细介绍路由跳转中发生了什么。   路由跳转执行的代码主要在.&#x2F;base.js文件里，详细看transitionTo方法。 12345678910111213141516171819202122transitionTo (location: RawLocation, onComplete?: Function, onAbort?">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-06-16T14:42:32.000Z">
+<meta property="article:modified_time" content="2020-08-28T03:53:39.248Z">
+<meta property="article:author" content="Mr.Onion">
+<meta property="article:tag" content="Vue">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Mr.Onion" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Mr.Onion</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-学习vue-router源码记录-2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/16/%E5%AD%A6%E4%B9%A0vue-router%E6%BA%90%E7%A0%81%E8%AE%B0%E5%BD%95-2/" class="article-date">
+  <time datetime="2019-06-16T14:42:32.000Z" itemprop="datePublished">2019-06-16</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/JavaScript/">JavaScript</a>►<a class="article-category-link" href="/categories/JavaScript/Vue/">Vue</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      学习vue-router源码记录-2
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>继上一遍文章大概介绍了vue-router里面的概念，这一篇文章主要详细介绍路由跳转中发生了什么。</p>
+</blockquote>
+<p> 路由跳转执行的代码主要在<code>./base.js</code>文件里，详细看<code>transitionTo</code>方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">transitionTo (location: RawLocation, onComplete?: Function, onAbort?: Function) &#123;</span><br><span class="line">    const route &#x3D; this.router.match(location, this.current)</span><br><span class="line">    this.confirmTransition(route, () &#x3D;&gt; &#123;</span><br><span class="line">      this.updateRoute(route)</span><br><span class="line">      onComplete &amp;&amp; onComplete(route)</span><br><span class="line">      this.ensureURL()</span><br><span class="line"></span><br><span class="line">      &#x2F;&#x2F; fire ready cbs once</span><br><span class="line">      if (!this.ready) &#123;</span><br><span class="line">        this.ready &#x3D; true</span><br><span class="line">        this.readyCbs.forEach(cb &#x3D;&gt; &#123; cb(route) &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;, err &#x3D;&gt; &#123;</span><br><span class="line">      if (onAbort) &#123;</span><br><span class="line">        onAbort(err)</span><br><span class="line">      &#125;</span><br><span class="line">      if (err &amp;&amp; !this.ready) &#123;</span><br><span class="line">        this.ready &#x3D; true</span><br><span class="line">        this.readyErrorCbs.forEach(cb &#x3D;&gt; &#123; cb(err) &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>transitionTo</code>代码非常简单，执行<code>this.route.match</code>，通过比较新的路由和就得路由拿到一个<code>route</code>对象，然后执行<code>confirmTransition</code>确认路由跳转。</p>
+<p>下面看看这个<code>route</code>对象的定义</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">declare type Route &#x3D; &#123;</span><br><span class="line">  path: string;</span><br><span class="line">  name: ?string;</span><br><span class="line">  hash: string;</span><br><span class="line">  query: Dictionary&lt;string&gt;;</span><br><span class="line">  params: Dictionary&lt;string&gt;;</span><br><span class="line">  fullPath: string;</span><br><span class="line">  matched: Array&lt;RouteRecord&gt;;</span><br><span class="line">  redirectedFrom?: string;</span><br><span class="line">  meta?: any;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对照代码，我们主要看<code>matched</code>这个属性，在上一篇文章里面已经介绍过<code>RouteRecord</code>对象的定义。路由一开始会执行<code>createMatcher</code>生成一个路由映射表，因此<code>matched</code>里面存放就是我们<font color=red>将要跳转到的路由匹配上的路由配置对象</font>。</p>
+<p>举一个简单的例子说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[&#123;</span><br><span class="line">    path: &#39;&#x2F;parent&#39;,</span><br><span class="line">    component: Parent,</span><br><span class="line">    children: [</span><br><span class="line">    &#123; path: &#39;foo&#39;, component: Foo &#125;,</span><br><span class="line">    &#123; path: &#39;bar&#39;, component: Bar &#125;,</span><br><span class="line">    ],</span><br><span class="line">&#125;]</span><br></pre></td></tr></table></figure>
+
+<p>假设我们配置了以下的路由，<code>createMatcher</code>会生成根据path建立的映射表</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pathMap &#x3D; &#123;</span><br><span class="line">    &#39;&#x2F;parent&#39;: RouteRecord,</span><br><span class="line">    &#39;&#x2F;parent&#x2F;foo&#39;: RouteRecord,</span><br><span class="line">    &#39;&#x2F;parent&#x2F;bar&#39;: RouteRecord,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假如我们发生了一个从<code>/parent</code>路由跳转到<code>/parent/foo</code>路由，首先执行以下代码生成的<code>route</code>对象</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">const route &#x3D; this.router.match(location, this.current)</span><br></pre></td></tr></table></figure>
+
+<p>因此根据我们假设的配置，这里的<code>route</code>里的<code>matched</code>将会包含<code>/parent</code>和<code>/parent/foo</code>的<code>RouteRecord</code>。至于具体的<code>match</code>方法代码就不详细解释了。</p>
+<p>继续讲路由的跳转，生成<code>route</code>对象后将会执行一个确认的方法<code>confirmTransition</code>。</p>
+<p>由于这个方法代码比较长，我们拆开来说明，首先看这个方法的入参说明，接受三个参数，<code>route</code>对象在前面已经生成过了，另外两个是执行完成的回调方法和退出的回调方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">confirmTransition (route: Route, onComplete: Function, onAbort?: Function)</span><br></pre></td></tr></table></figure>
+
+<p>在代码的一开始首先判断当前路由与跳转的路由是否是同一个路由，如果是则直接退出。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">const current &#x3D; this.current</span><br><span class="line">const abort &#x3D; err &#x3D;&gt; &#123;</span><br><span class="line">  if (isError(err)) &#123;</span><br><span class="line">    if (this.errorCbs.length) &#123;</span><br><span class="line">      this.errorCbs.forEach(cb &#x3D;&gt; &#123; cb(err) &#125;)</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      warn(false, &#39;uncaught error during route navigation:&#39;)</span><br><span class="line">      console.error(err)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  onAbort &amp;&amp; onAbort(err)</span><br><span class="line">&#125;</span><br><span class="line">if (</span><br><span class="line">  isSameRoute(route, current) &amp;&amp;</span><br><span class="line">  &#x2F;&#x2F; in the case the route map has been dynamically appended to</span><br><span class="line">  route.matched.length &#x3D;&#x3D;&#x3D; current.matched.length</span><br><span class="line">) &#123;</span><br><span class="line">  this.ensureURL()</span><br><span class="line">  return abort()</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这里的<code>ensureURL</code>方法定义在<code>HTML5History</code>的原型链上，实际上执行的是保存路由变化历史记录，根据<code>push</code>是<code>true</code>或<code>false</code>来确定执行<code>pushState</code>还是<code>replaceState</code>。这一方法在执行完路由跳转后同样会执行一次。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">HTML5History.prototype.ensureURL &#x3D; function ensureURL (push) &#123;</span><br><span class="line">  if (getLocation(this.base) !&#x3D;&#x3D; this.current.fullPath) &#123;</span><br><span class="line">    var current &#x3D; cleanPath(this.base + this.current.fullPath);</span><br><span class="line">    push ? pushState(current) : replaceState(current);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>继续看后面的代码，首先通过<code>resolveQueue</code>对比<code>this.current</code>和<code>route</code>对象的<code>matched</code>提取三种变化的组件队列。根据命名我们直接可得知<code>updated</code>、<code>deactivated</code>、<code>activated</code>分别对应更新的组件、失效的组件、激活的组件。然后生成一个需要执行方法的队列<code>queue</code>，根据这个队列的生成定义，我们可以看出执行方法的顺序，至于通过<code>extractLeaveGuards</code>和<code>extractUpdateHooks</code>方法提取组件里的守卫函数就不细说了。</p>
+<ol>
+<li><p>在失活的组件里调用离开守卫。</p>
+</li>
+<li><p>调用全局的 beforeEach 守卫。</p>
+</li>
+<li><p>在重用的组件里调用 beforeRouteUpdate 守卫</p>
+</li>
+<li><p>在激活的路由配置里调用 beforeEnter。</p>
+</li>
+<li><p>解析异步路由组件。</p>
+</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">const &#123;</span><br><span class="line">  updated,</span><br><span class="line">  deactivated,</span><br><span class="line">  activated</span><br><span class="line">&#125; &#x3D; resolveQueue(this.current.matched, route.matched)</span><br><span class="line"></span><br><span class="line">const queue: Array&lt;?NavigationGuard&gt; &#x3D; [].concat(</span><br><span class="line">  &#x2F;&#x2F; in-component leave guards</span><br><span class="line">  extractLeaveGuards(deactivated),</span><br><span class="line">  &#x2F;&#x2F; global before hooks</span><br><span class="line">  this.router.beforeHooks,</span><br><span class="line">  &#x2F;&#x2F; in-component update hooks</span><br><span class="line">  extractUpdateHooks(updated),</span><br><span class="line">  &#x2F;&#x2F; in-config enter guards</span><br><span class="line">  activated.map(m &#x3D;&gt; m.beforeEnter),</span><br><span class="line">  &#x2F;&#x2F; async components</span><br><span class="line">  resolveAsyncComponents(activated)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>看看<code>resolveQueue</code>是如何提取变化的组件。比较<code>current</code>和<code>next</code>确定一个变化的位置<code>i</code>，<code>next</code>里的从<code>0</code>到<code>i</code>则是<code>updated</code>的部分，<code>i</code>之后的则是<code>activated</code>的部分，而<code>current</code>里<code>i</code>之后的则是<code>deactivated</code>的部分。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">function resolveQueue (</span><br><span class="line">  current: Array&lt;RouteRecord&gt;,</span><br><span class="line">  next: Array&lt;RouteRecord&gt;</span><br><span class="line">): &#123;</span><br><span class="line">  updated: Array&lt;RouteRecord&gt;,</span><br><span class="line">  activated: Array&lt;RouteRecord&gt;,</span><br><span class="line">  deactivated: Array&lt;RouteRecord&gt;</span><br><span class="line">&#125; &#123;</span><br><span class="line">  let i</span><br><span class="line">  const max &#x3D; Math.max(current.length, next.length)</span><br><span class="line">  for (i &#x3D; 0; i &lt; max; i++) &#123;</span><br><span class="line">    if (current[i] !&#x3D;&#x3D; next[i]) &#123;</span><br><span class="line">      break</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  return &#123;</span><br><span class="line">    updated: next.slice(0, i),</span><br><span class="line">    activated: next.slice(i),</span><br><span class="line">    deactivated: current.slice(i)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来就是生成迭代器方法<code>iterator</code>，执行<code>runQueue</code>方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">this.pending &#x3D; route</span><br><span class="line">const iterator &#x3D; (hook: NavigationGuard, next) &#x3D;&gt; &#123;</span><br><span class="line">  if (this.pending !&#x3D;&#x3D; route) &#123;</span><br><span class="line">    return abort()</span><br><span class="line">  &#125;</span><br><span class="line">  try &#123;</span><br><span class="line">    hook(route, current, (to: any) &#x3D;&gt; &#123;</span><br><span class="line">      if (to &#x3D;&#x3D;&#x3D; false || isError(to)) &#123;</span><br><span class="line">        &#x2F;&#x2F; next(false) -&gt; abort navigation, ensure current URL</span><br><span class="line">        this.ensureURL(true)</span><br><span class="line">        abort(to)</span><br><span class="line">      &#125; else if (</span><br><span class="line">        typeof to &#x3D;&#x3D;&#x3D; &#39;string&#39; ||</span><br><span class="line">        (typeof to &#x3D;&#x3D;&#x3D; &#39;object&#39; &amp;&amp; (</span><br><span class="line">          typeof to.path &#x3D;&#x3D;&#x3D; &#39;string&#39; ||</span><br><span class="line">          typeof to.name &#x3D;&#x3D;&#x3D; &#39;string&#39;</span><br><span class="line">        ))</span><br><span class="line">      ) &#123;</span><br><span class="line">        &#x2F;&#x2F; next(&#39;&#x2F;&#39;) or next(&#123; path: &#39;&#x2F;&#39; &#125;) -&gt; redirect</span><br><span class="line">        abort()</span><br><span class="line">        if (typeof to &#x3D;&#x3D;&#x3D; &#39;object&#39; &amp;&amp; to.replace) &#123;</span><br><span class="line">          this.replace(to)</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">          this.push(to)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        &#x2F;&#x2F; confirm transition and pass on the value</span><br><span class="line">        next(to)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125; catch (e) &#123;</span><br><span class="line">    abort(e)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">runQueue(queue, iterator, () &#x3D;&gt; &#123;</span><br><span class="line">  const postEnterCbs &#x3D; []</span><br><span class="line">  const isValid &#x3D; () &#x3D;&gt; this.current &#x3D;&#x3D;&#x3D; route</span><br><span class="line">  &#x2F;&#x2F; wait until async components are resolved before</span><br><span class="line">  &#x2F;&#x2F; extracting in-component enter guards</span><br><span class="line">  const enterGuards &#x3D; extractEnterGuards(activated, postEnterCbs, isValid)</span><br><span class="line">  const queue &#x3D; enterGuards.concat(this.router.resolveHooks)</span><br><span class="line">  runQueue(queue, iterator, () &#x3D;&gt; &#123;</span><br><span class="line">    if (this.pending !&#x3D;&#x3D; route) &#123;</span><br><span class="line">      return abort()</span><br><span class="line">    &#125;</span><br><span class="line">    this.pending &#x3D; null</span><br><span class="line">    onComplete(route)</span><br><span class="line">    if (this.router.app) &#123;</span><br><span class="line">      this.router.app.$nextTick(() &#x3D;&gt; &#123;</span><br><span class="line">        postEnterCbs.forEach(cb &#x3D;&gt; &#123; cb() &#125;)</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p><code>runQueue</code>方法的代码并不复杂，一个递归执行队列的方法，使用<code>iterator(fn参数)</code>执行<code>queue</code>，<code>iterator</code>里给<code>hook</code>传入的参数分别代表<code>to</code>、<code>from</code>、<code>next</code>，在队列执行完后执行传入的回调方法。这里执行过程代表了vue-router的守卫函数的执行函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">export function runQueue (queue: Array&lt;?NavigationGuard&gt;, fn: Function, cb: Function) &#123;</span><br><span class="line">  const step &#x3D; index &#x3D;&gt; &#123;</span><br><span class="line">    if (index &gt;&#x3D; queue.length) &#123;</span><br><span class="line">      cb()</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      if (queue[index]) &#123;</span><br><span class="line">        fn(queue[index], () &#x3D;&gt; &#123;</span><br><span class="line">          step(index + 1)</span><br><span class="line">        &#125;)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        step(index + 1)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  step(0)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>综上所述，路由跳转的变化大概上已经解释完，当然这并不是完整的执行逻辑，只是路由跳转大概的过程差不多就是如此。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/06/16/%E5%AD%A6%E4%B9%A0vue-router%E6%BA%90%E7%A0%81%E8%AE%B0%E5%BD%95-2/" data-id="ckedpbrui000k1zm16u7na71n" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/06/23/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94vue-diff/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          学习vue源码—vue-diff
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/06/07/%E5%AD%A6%E4%B9%A0vue-router%E6%BA%90%E7%A0%81%E8%AE%B0%E5%BD%95/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">学习vue-router源码记录-1</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/CSS/">CSS</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/HTTP/">HTTP</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/">JavaScript</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/JavaScript/Vue/">Vue</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/Node-js/">Node.js</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/CSS/" rel="tag">CSS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/HTTP/" rel="tag">HTTP</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/" rel="tag">JavaScript</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Node-js/" rel="tag">Node.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/" rel="tag">Vue</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/CSS/" style="font-size: 10px;">CSS</a> <a href="/tags/HTTP/" style="font-size: 15px;">HTTP</a> <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Node-js/" style="font-size: 10px;">Node.js</a> <a href="/tags/Vue/" style="font-size: 20px;">Vue</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">八月 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">八月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">六月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">五月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">四月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/03/">三月 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/08/15/JS%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/">JS数据类型判断</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/10/CSS%E5%AE%B9%E6%98%93%E5%BF%BD%E7%95%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E7%9F%A5%E8%AF%86%E7%82%B9/">CSS容易忽略的一些知识点</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/15/%E5%AD%A6%E4%B9%A0vuex%E6%BA%90%E7%A0%81/">学习vuex源码</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/07/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94nextTick/">学习vue源码—nextTick</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/30/%E5%AD%A6%E4%B9%A0vue%E6%BA%90%E7%A0%81%E2%80%94mvvm/">学习vue源码—mvvm</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Mr.Onion<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
