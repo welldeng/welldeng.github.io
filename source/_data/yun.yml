@@ -53,3 +53,10 @@ reward:
       path: https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/donate/wechatpay-qrcode.jpg
       color: "#2DC100"
       icon: icon-wechat-pay-line
+
+post_meta:
+  item_text: false
+  created_at: true
+  updated_at: false
+  categories: true
+  tags: true
