@@ -1,5 +1,4 @@
 ---
-layout: /archives
 title: 理解__proto__和prototype
 date: 2019-03-22 11:32:31
 tags: JavaScript
