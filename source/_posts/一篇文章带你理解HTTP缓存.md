@@ -76,7 +76,7 @@ Last-Modified: Wed, 21 Oct 2015 07:28:00 GMT
 
 图示：
 
-![](https://user-gold-cdn.xitu.io/2019/5/18/16ac9fe6feb72d69?w=1398&h=1298&f=png&s=344446)
+![](1.png)
 图片来源：[https://www.cnblogs.com/xiaohuochai/p/6178810.html](https://www.cnblogs.com/xiaohuochai/p/6178810.html)
 
 ### HTTP缓存验证说明
