@@ -20,7 +20,7 @@ categories:
 6. 调用<code>get</code>方法调用当前<code>watcher</code>的<code>getter</code>执行更新方法
 7. <code>updateComponent</code>方法里调用了<code>render</code>方法开始执行渲染页面
 8. <code>patch</code>、<code>patchVnode</code>、<code>updateChildren</code>方法都是比较VNode更新渲染的函数，不过重点的diff过程在<code>updateChildren</code>方法里。
-   ![](https://user-gold-cdn.xitu.io/2019/6/23/16b83a2e38faea15?w=1016&h=1066&f=png&s=181273)
+   ![](1.jpeg)
 
 ## 2. vue-diff的具体实现
 
@@ -123,7 +123,7 @@ categories:
 
 图示：官方文档的说明（👇）
 
-![](https://user-gold-cdn.xitu.io/2019/6/23/16b84467afb18dfd?w=1458&h=632&f=png&s=186334)
+![](2.jpeg)
 
 <code>sameVnode</code>方法定义
 

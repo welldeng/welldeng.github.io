@@ -14,7 +14,7 @@ categories:
 
 效果图如下：
 
-![](https://user-gold-cdn.xitu.io/2019/8/10/16c7a14e82ef9a8e?w=740&h=758&f=png&s=57903)
+![](1.jpeg)
 
 代码如下：
 
@@ -44,7 +44,7 @@ categories:
 
 效果图如下：
 
-![](https://user-gold-cdn.xitu.io/2019/8/10/16c7a23650a45341?w=1570&h=522&f=jpeg&s=48236)
+![](2.jpeg)
 
 代码如下：
 
@@ -62,7 +62,7 @@ categories:
 
 1. 当剩余两个项目内不存在内容的时候，分配的空间就是正确的；
    效果图如下：
-   ![](https://user-gold-cdn.xitu.io/2019/8/10/16c7a2b825c7ad9b?w=1602&h=422&f=jpeg&s=30203)
+   ![](3.jpeg)
    代码如下：
 
 ```
@@ -78,7 +78,7 @@ categories:
 2. 给剩余两个项目设置<code>flex-basic: 0;</code>
 
 效果图如下：
-![](https://user-gold-cdn.xitu.io/2019/8/10/16c7a2e66c7eb215?w=1604&h=566&f=jpeg&s=51175)
+![](4.jpeg)
 代码如下：
 
 ```
@@ -109,7 +109,7 @@ categories:
 
 效果图如下：
 
-![](https://user-gold-cdn.xitu.io/2019/8/10/16c7a5a01b1f48fe?w=1610&h=494&f=jpeg&s=54951)
+![](5.jpeg)
 代码如下：
 
 ```

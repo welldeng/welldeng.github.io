@@ -23,7 +23,7 @@ categories:
 
 [should](http://shouldjs.github.io/)BDD风格第三方断言库，mocha同时也支持其他第三方断言库，选择哪看个人喜好
 
-![](https://user-gold-cdn.xitu.io/2019/3/15/16981e8c40ebddc7?w=1920&h=656&f=png&s=134977)
+![](1.jpeg)
 
 根据mocha的Github文档说明安装mocha，
 
@@ -93,7 +93,7 @@ describe('大数相加add方法', function () {
 describe()定义了一组测试用例，describe()内可重复嵌套describe()，第一个参数为测试用例命名，第二个参数为执行的函数
 
 在项目目录下运行mocha命令执行测试
-![](https://user-gold-cdn.xitu.io/2019/3/15/16981fc41dbbb857?w=1278&h=340&f=png&s=34723)
+![](2.jpeg)
 大数相加的函数输出值与我们输入的期望值则通过测试。
 
 ## Karma + mocha + travis-CI
@@ -238,7 +238,7 @@ module.exports = function (config) {
 
 登陆后可以看到自己github上所有项目仓库，选择你需要持续集成的项目仓库
 
-![](https://user-gold-cdn.xitu.io/2019/3/16/1698468b9abfcecc?w=1382&h=654&f=png&s=95231)
+![](3.jpeg)
 按照文档说明要在项目目录下新增一个.travis.yml文件，配置文件内容参考文档[https://docs.travis-ci.com/user/languages/javascript-with-nodejs/](https://docs.travis-ci.com/user/languages/javascript-with-nodejs/)
 
 下面是简单的配置文件说明
@@ -255,31 +255,31 @@ before_script:
 language: 定义我们测试的语言
 
 node_js: 定义node的版本，可以指定某个特定的版本
-![](https://user-gold-cdn.xitu.io/2019/3/16/169845b68d5ea417?w=560&h=302&f=png&s=23934)
+![](4.jpeg)
 按照文档说明，travis-CI执行测试默认执行npm install安装依赖包，安装完依赖后默认执行npm test命令执行测试任务。
 
 before_script:在script配置命令前执行
 
 根据karma官网文档说明接入travis-CI的配置里说明[http://karma-runner.github.io/1.0/plus/travis.html](http://karma-runner.github.io/1.0/plus/travis.html)
 
-![](https://user-gold-cdn.xitu.io/2019/3/16/169846092e4584de?w=2042&h=636&f=png&s=108274)
+![](5.jpeg)
 
 新增.travis.yml文件后并上传到github项目仓库中，在travis-ci网站中打开开关，travis-ci检测到配置文件会自动执行测试命令
 
-![](https://user-gold-cdn.xitu.io/2019/3/16/169846e9815e2c76?w=3336&h=766&f=png&s=180559)
+![](6.jpeg)
 
 在job log标签页中可以看到执行任务的日志
 
-![](https://user-gold-cdn.xitu.io/2019/3/16/169847192a1e0f81?w=2728&h=1766&f=png&s=430910)
+![](7.jpeg)
 
 根据任务日志可以看到我们的测试任务执行情况，4个测试用例均通过测试。
 
 在集成travis-ci到项目中遇到了不少坑，翻了文档看了很多配置，一开始以为是chrome-launch的问题，在before_script中手动安装也是报错；另外一开始是看到文档里是对firefox配置，以为这是专门针对firefox的配置，后来照着karma接入travis-ci的文档配置尝试一下，居然成功了，这结果来得太意外。
 
-![](https://user-gold-cdn.xitu.io/2019/3/16/1698476b924555b9?w=2042&h=636&f=png&s=108274)
+![](8.jpeg)
 
 另外在karma.conf的文件中，singleRun的配置也需要配置成true，不然travis-ci任务会一直执行。
 
-![](https://user-gold-cdn.xitu.io/2019/3/16/169847b76a941a40?w=497&h=73&f=png&s=9990)
+![](9.jpeg)
 
 以上所述为第一次探索自动化测试的过程，确实学习到了很多东西，但是很多高级的用法并不太了解，也有不足的地方没有接入到真实项目中配合使用。
